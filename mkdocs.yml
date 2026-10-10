@@ -1,0 +1,86 @@
+site_name: OpenAcre Documentation
+site_url: https://openacre-project.github.io/OpenAcre/
+site_description: OpenAcre is a hardcore, open-source farming and survival simulator built in Godot 4. The best realistic agricultural engine for systemic game design.
+site_author: The OpenAcre Project
+copyright: Copyright &copy; 2026 The OpenAcre Project
+nav:
+  - Home: index.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Core Runtime: architecture/core_runtime.md
+      - Save/Load Runtime: architecture/save_load_runtime.md
+      - UI Architecture: architecture/ui_architecture.md
+      - Map Fields: architecture/map_fields_architecture.md
+  - Systems:
+      - Vehicles: systems/vehicles.md
+      - Camera: systems/camera.md
+      - Items & Inventory: systems/items_and_inventory.md
+      - Day/Night Cycle: systems/day_night_cycle.md
+  - Visualization:
+      - Terrain3D: rendering/terrain3d_rendering.md
+      - Chunk System: rendering/chunk_system.md
+  - Developer:
+      - Console: dev/developer_console.md
+      - Save/Load QA: dev/save_load_qa.md
+      - Vehicle Attachments: dev/advanced_attachments.md
+      - Addon Patches: dev/addon_patches.md
+  - Dev Log:
+      - Plow Attachment: dev_log/plow_attachment.md
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: Outfit
+    code: Fira Code
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.expand
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:pymdownx.emoji.twemoji
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+
+extra_css:
+  - Assets/stylesheets/extra.css
+  - stylesheets/technical-docs.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
