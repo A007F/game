@@ -3,6 +3,7 @@ class_name CompanionBase3D
 
 enum CompanionState { FOLLOW, DEFEND, ATTACK, REST, GATHER }
 
+@export var data: CompanionData
 @export var companion_name: String = "Oy (Billy-Bumbler)"
 @export var move_speed: float = 5.5
 @export var follow_distance: float = 3.0
@@ -21,13 +22,19 @@ func _ready() -> void:
 	add_to_group("companions")
 	_find_player()
 
+var loyalty_system: CompanionLoyaltySystem = CompanionLoyaltySystem.new()
+var _triage_cooldown: float = 0.0
+var _gather_timer: float = 0.0
+
 func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	_attack_timer -= delta
+	_triage_cooldown -= delta
 
 	if player_node == null:
 		_find_player()
 
+	_check_emergency_triage()
 	_scan_for_enemies()
 
 	match current_state:
@@ -38,8 +45,30 @@ func _physics_process(delta: float) -> void:
 		CompanionState.DEFEND:
 			velocity.x = 0.0
 			velocity.z = 0.0
+		CompanionState.GATHER:
+			_process_gather(delta)
 
 	move_and_slide()
+
+func _check_emergency_triage() -> void:
+	if _triage_cooldown > 0.0 or not loyalty_system.is_triage_unlocked():
+		return
+
+	var player_data: PlayerData = GameManager.session.entities.get_player(&"player.main") if GameManager.session else null
+	if player_data and player_data.current_health < 30.0:
+		_triage_cooldown = 15.0 # Cooldown 15 sec
+		player_data.heal(35.0)
+		GameLog.info("EMERGENCY TRIAGE! %s administered emergency healing (+35 HP)!" % companion_name)
+
+func _process_gather(delta: float) -> void:
+	_gather_timer += delta
+	if _gather_timer >= 2.0:
+		_gather_timer = 0.0
+		var player_data: PlayerData = GameManager.session.entities.get_player(&"player.main") if GameManager.session else null
+		if player_data:
+			player_data.reserve_ammo += 8
+			GameLog.info("AUTO-LOOT: %s collected scavenged ammo (+8 Rds)!" % companion_name)
+		current_state = CompanionState.FOLLOW
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():

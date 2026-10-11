@@ -12,3 +12,28 @@ class_name WeaponData
 @export var ammo_type: StringName = &"ammo.revolver"
 @export var is_automatic: bool = false
 @export var weapon_mesh: PackedScene = null
+@export var attachments: Array[WeaponAttachmentData] = []
+
+func get_effective_damage() -> float:
+	var mult: float = 1.0
+	for att in attachments:
+		if att: mult *= att.damage_multiplier
+	return damage * mult
+
+func get_effective_recoil() -> float:
+	var mult: float = 1.0
+	for att in attachments:
+		if att: mult *= att.recoil_multiplier
+	return recoil * mult
+
+func get_effective_range() -> float:
+	var mult: float = 1.0
+	for att in attachments:
+		if att: mult *= att.range_multiplier
+	return effective_range * mult
+
+func get_effective_spread() -> float:
+	var mult: float = 1.0
+	for att in attachments:
+		if att: mult *= att.spread_multiplier
+	return spread * mult

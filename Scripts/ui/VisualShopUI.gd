@@ -23,15 +23,15 @@ func _build_shop_gui() -> void:
 	main_panel = Panel.new()
 	main_panel.name = "MainPanel"
 	main_panel.set_anchors_preset(Control.PRESET_CENTER)
-	main_panel.custom_minimum_size = Vector2(500, 400)
-	main_panel.position = -Vector2(250, 200)
+	main_panel.custom_minimum_size = Vector2(720, 420)
+	main_panel.position = -Vector2(360, 210)
 	add_child(main_panel)
 
 	var title := Label.new()
 	title.text = "WAYSTATION & COSMETICS STORE"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.position = Vector2(0, 10)
-	title.size = Vector2(500, 30)
+	title.size = Vector2(720, 30)
 	main_panel.add_child(title)
 
 	balance_label = Label.new()
@@ -42,8 +42,13 @@ func _build_shop_gui() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(20, 75)
-	scroll.size = Vector2(460, 275)
+	scroll.size = Vector2(460, 290)
 	main_panel.add_child(scroll)
+
+	# 3D Skin Preview viewport on the right side
+	var preview_3d := SkinPreview3D.new()
+	preview_3d.position = Vector2(490, 75)
+	main_panel.add_child(preview_3d)
 
 	item_container = VBoxContainer.new()
 	item_container.name = "ItemContainer"
@@ -52,7 +57,7 @@ func _build_shop_gui() -> void:
 
 	var btn_close := Button.new()
 	btn_close.text = "Close Store"
-	btn_close.position = Vector2(180, 360)
+	btn_close.position = Vector2(290, 375)
 	btn_close.size = Vector2(140, 30)
 	btn_close.pressed.connect(toggle_shop)
 	main_panel.add_child(btn_close)

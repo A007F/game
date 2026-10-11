@@ -3,7 +3,7 @@ class_name EnemyBase3D
 
 signal enemy_died(enemy: EnemyBase3D)
 
-enum State { IDLE, PATROL, CHASE, ATTACK, DEAD }
+enum State { IDLE, PATROL, CHASE, ATTACK, TAKE_COVER, FLANK, DEAD }
 
 @export var data: EnemyData
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D if has_node("NavigationAgent3D") else null
@@ -21,6 +21,9 @@ func _ready() -> void:
 	current_health = data.max_health
 	add_to_group("enemies")
 
+var _cover_pos: Vector3 = Vector3.ZERO
+var _use_left_flank: bool = true
+
 func _physics_process(delta: float) -> void:
 	if current_state == State.DEAD:
 		return
@@ -37,8 +40,31 @@ func _physics_process(delta: float) -> void:
 			_process_chase(delta)
 		State.ATTACK:
 			_process_attack(delta)
+		State.TAKE_COVER:
+			_process_take_cover(delta)
+		State.FLANK:
+			_process_flank(delta)
 
 	move_and_slide()
+
+func _process_take_cover(_delta: float) -> void:
+	if _cover_pos.distance_to(global_position) < 1.0:
+		current_state = State.ATTACK
+		return
+	var dir := (_cover_pos - global_position).normalized()
+	dir.y = 0.0
+	velocity.x = dir.x * data.chase_speed
+	velocity.z = dir.z * data.chase_speed
+
+func _process_flank(_delta: float) -> void:
+	if target_node == null:
+		current_state = State.IDLE
+		return
+	var flank_dir := EnemyTacticalAI.calculate_flank_vector(global_position, target_node.global_position, _use_left_flank)
+	velocity.x = flank_dir.x * data.chase_speed
+	velocity.z = flank_dir.z * data.chase_speed
+	if _distance_to_target() <= data.attack_range:
+		current_state = State.ATTACK
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():

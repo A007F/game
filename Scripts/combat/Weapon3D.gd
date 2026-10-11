@@ -71,15 +71,19 @@ func _perform_raycast_shot(camera: Camera3D) -> void:
 	var ray_origin := camera.project_ray_origin(screen_center)
 	var ray_dir := camera.project_ray_normal(screen_center)
 
-	# Apply spread
+	# Apply effective spread and range from attachments
+	var eff_spread := data.get_effective_spread() if data.has_method("get_effective_spread") else data.spread
+	var eff_range := data.get_effective_range() if data.has_method("get_effective_range") else data.effective_range
+	var eff_damage := data.get_effective_damage() if data.has_method("get_effective_damage") else data.damage
+
 	var spread_offset := Vector3(
-		randf_range(-data.spread, data.spread),
-		randf_range(-data.spread, data.spread),
+		randf_range(-eff_spread, eff_spread),
+		randf_range(-eff_spread, eff_spread),
 		0.0
 	)
 	ray_dir = (ray_dir + spread_offset).normalized()
 
-	var ray_end := ray_origin + ray_dir * data.effective_range
+	var ray_end := ray_origin + ray_dir * eff_range
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
@@ -87,7 +91,7 @@ func _perform_raycast_shot(camera: Camera3D) -> void:
 	var result := space_state.intersect_ray(query)
 	if result:
 		var collider: Object = result.collider
-		var final_damage: float = data.damage
+		var final_damage: float = eff_damage
 		var is_headshot: bool = false
 
 		# Check relative Y offset for headshots

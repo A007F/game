@@ -46,6 +46,16 @@ const OrbitCameraControllerRef = preload("res://Scripts/camera/OrbitCameraContro
 @export var default_fov: float = 75.0
 
 var is_aiming_down_sights: bool = false
+var is_rolling: bool = false
+var roll_timer: float = 0.0
+@export var roll_duration: float = 0.45
+@export var roll_speed: float = 12.0
+
+@export var melee_damage: float = 45.0
+@export var melee_range: float = 2.2
+@export var melee_cooldown: float = 0.8
+var _melee_timer: float = 0.0
+
 var _player_data: PlayerData
 var active_weapon: Weapon3D
 var combat_hud: CombatHUD
@@ -153,6 +163,14 @@ func _input(event: InputEvent) -> void:
 			if active_weapon and _player_data:
 				active_weapon.try_reload(_player_data)
 
+		# Gunslinger Melee Knife Attack
+		if event.physical_keycode == KEY_V and event.is_pressed() and not event.is_echo():
+			perform_melee_knife_attack()
+
+		# Dodge Roll
+		if event.physical_keycode == KEY_C and event.is_pressed() and not event.is_echo():
+			perform_dodge_roll()
+
 		# Test Drop (using 'G' for now as there is no UI yet)
 		if event.physical_keycode == KEY_G and event.is_pressed() and not event.is_echo():
 			drop_item(0) # Drops first item in pockets for testing
@@ -181,9 +199,48 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 
 func take_damage(amount: float) -> void:
+	if is_rolling:
+		GameLog.info("DODGE ROLL INVULNERABILITY! Damage dodged!")
+		return
 	if _player_data:
 		_player_data.take_damage(amount)
 		GameLog.info("Player took %f damage! (Current HP: %f)" % [amount, _player_data.current_health])
+
+func perform_dodge_roll() -> void:
+	if is_rolling:
+		return
+	if _player_data and _player_data.energy < 20.0:
+		GameLog.warn("Not enough stamina to dodge roll!")
+		return
+
+	if _player_data:
+		_player_data.burn_energy(0.2)
+
+	is_rolling = true
+	roll_timer = roll_duration
+	GameLog.info("DODGE ROLL PERFORMED! Invulnerable for %.2f seconds!" % roll_duration)
+
+func perform_melee_knife_attack() -> void:
+	if _melee_timer > 0.0:
+		return
+
+	_melee_timer = melee_cooldown
+	GameLog.info("GUNSLINGER KNIFE STRIKE!")
+
+	# Raycast forward for melee hit
+	var space_state := get_world_3d().direct_space_state
+	var ray_origin := global_position + Vector3.UP * 1.2
+	var ray_end := ray_origin + (-global_transform.basis.z * melee_range)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	var result := space_state.intersect_ray(query)
+
+	if result:
+		var collider: Object = result.collider
+		GameLog.info("Melee hit: %s for %.1f damage!" % [collider.name, melee_damage])
+		if collider.has_method("take_damage"):
+			collider.take_damage(melee_damage)
+		elif collider.get_parent() and collider.get_parent().has_method("take_damage"):
+			collider.get_parent().take_damage(melee_damage)
 
 ## UESS Drop: removes entity from inventory, clears parent, sets position.
 ## StreamSpooler automatically detects the entity in the spatial chunk and spawns its 3D view.
@@ -244,6 +301,16 @@ func _physics_process(delta: float) -> void:
 			true,
 			Basis(Vector3.UP, _camera_controller.get_yaw_global())
 		)
+
+	if _melee_timer > 0.0:
+		_melee_timer -= delta
+
+	if is_rolling:
+		roll_timer -= delta
+		velocity = -global_transform.basis.z * roll_speed
+		move_and_slide()
+		if roll_timer <= 0.0:
+			is_rolling = false
 
 	_hover_frame_count += 1
 	if _hover_frame_count >= hover_ray_interval_frames:
